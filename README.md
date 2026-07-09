@@ -39,46 +39,6 @@ Expected-metrics models live or die on two things: features that don't leak the 
 | `src/train.py` | Reproducible synthetic shot generator, Optuna TPE study with per-trial nested MLflow runs, final refit logging model + importance matrix + calibration curve |
 | `src/evaluate.py` | Brier score, Brier skill score, ROC-AUC, log loss, decile calibration table, markdown performance report |
 
-## Quick Start
-
-```bash
-git clone <repo-url> && cd expected-metrics-ml
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# run a 25-trial study; all lineage lands in sqlite:///mlflow.db
-python -m src.train --trials 25 --rows 6000
-
-# browse experiments, artifacts, and calibration curves
-mlflow ui --backend-store-uri sqlite:///mlflow.db
-
-# produce a standalone markdown performance report
-python -c "
-import numpy as np
-from pathlib import Path
-from src.evaluate import compute_metrics, export_report
-rng = np.random.default_rng(0)
-p = rng.uniform(0.02, 0.9, 2000); y = rng.binomial(1, p)
-export_report(compute_metrics(y, p), Path('reports/performance.md'))
-"
-```
-
-Test and lint (a fast suite plus a marked slow end-to-end study smoke test):
-
-```bash
-pip install -r requirements-dev.txt
-ruff check src tests
-pytest -q -m "not slow"   # fast unit tests
-pytest -q -m slow         # 2-trial end-to-end study
-```
-
-### Docker
-
-```bash
-docker build -t expected-metrics .
-docker run --rm -v "$PWD/mlflow:/app/mlflow" expected-metrics --trials 50
-```
-
 ## Business & Analytics Impact
 
 - **Recruitment signal over noise.** A calibrated xG model separates finishing luck from chance quality: a striker outperforming xG for three seasons is a skill signal; for three matches, it's variance. That distinction is the difference between a good and a catastrophic transfer fee.
